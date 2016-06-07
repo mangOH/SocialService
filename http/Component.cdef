@@ -1,0 +1,37 @@
+
+sources:
+{
+    request.cpp
+    oauth.cpp
+    KeyValueParser.cpp
+    base64.cpp
+    SHA1.cpp
+    HMAC_SHA1.cpp
+}
+
+cxxflags:
+{
+    -std=c++11
+    -I$MANGOH_ROOT/apps/SocialService/curl/include
+    -I$MANGOH_ROOT/apps/SocialService/json/
+}
+
+ldflags:
+{
+    -L$MANGOH_ROOT/apps/SocialService/curl/lib
+    -lcurl
+}
+
+requires:
+{
+    component:
+    {
+        $MANGOH_ROOT/apps/SocialService/curl
+        $MANGOH_ROOT/apps/SocialService/json
+    }
+
+    device:
+    {
+        /dev/urandom     /dev/
+    }
+}

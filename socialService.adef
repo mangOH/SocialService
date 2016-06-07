@@ -1,0 +1,63 @@
+
+version: 1.0
+
+executables:
+{
+    socialService = ( social json http )
+    twitterClient = ( twitterClient )
+}
+
+requires:
+{
+    file:
+    {
+        /usr/bin/strace /bin/
+    }
+}
+
+processes:
+{
+    run:
+    {
+        ( socialService )
+    }
+}
+
+bundles:
+{
+    file:
+    {
+        [x] scripts/twitter  /bin/
+    }
+}
+
+extern:
+{
+    twitter = socialService.social.twitter
+}
+
+bindings:
+{
+    socialService.social.le_secStore -> <root>.le_secStore
+
+    twitterClient.twitterClient.serviceConfig -> socialService.social.serviceConfig
+    twitterClient.twitterClient.twitter -> socialService.social.twitter
+}
+
+
+//--------------------------------------------------------------------------------------------------
+/*
+ *  If you a the socialService application to your sdef, you can enable the twitter command line
+ *  tool to your commands section:
+ *
+ *  commands:
+ *  {
+ *      twitter = socialService:/bin/twitter
+ *  }
+ *
+ *
+ *  Otherwise the twitter command will be available under:
+ *
+ *  /legato/systems/current/apps/socialService/read-only/bin/twitter
+ */
+//--------------------------------------------------------------------------------------------------

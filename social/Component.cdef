@@ -1,0 +1,37 @@
+
+sources:
+{
+    social.cpp
+    twitter.cpp
+}
+
+cxxflags:
+{
+    -std=c++11
+
+    -I$MANGOH_ROOT/apps/SocialService/http/
+    -I$MANGOH_ROOT/apps/SocialService/json/
+}
+
+requires:
+{
+    component:
+    {
+        $MANGOH_ROOT/apps/SocialService/json
+        $MANGOH_ROOT/apps/SocialService/http
+    }
+
+    api:
+    {
+        le_secStore.api
+    }
+}
+
+provides:
+{
+    api:
+    {
+        $MANGOH_ROOT/apps/SocialService/interfaces/twitter.api
+        $MANGOH_ROOT/apps/SocialService/interfaces/serviceConfig.api
+    }
+}
