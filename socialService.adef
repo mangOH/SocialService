@@ -1,5 +1,6 @@
-
 version: 1.0
+sandboxed: true
+start: auto
 
 executables:
 {
@@ -28,6 +29,7 @@ bundles:
     file:
     {
         [x] scripts/twitter  /bin/
+        config/resolv.conf /etc/
     }
 }
 
