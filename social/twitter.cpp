@@ -40,29 +40,25 @@ static le_result_t LoadKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    char buffer[SERVICECONFIG_KEY_LEN + 1] = "";
-    size_t size = sizeof(buffer);
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn(keyName);
 
-    std::string name = keyName + "/public";
-    le_result_t result = le_secStore_Read(name.c_str(), (uint8_t*)buffer, &size);
+    char buffer[LE_CFG_STR_LEN_BYTES] = "";
+    le_result_t result = le_cfg_GetString(iterRef, "./public", buffer, sizeof(buffer), "");
+
+    LE_ASSERT(result != LE_OVERFLOW);
+
+    credentials.publicKey = buffer;
+
+    result = le_cfg_GetString(iterRef, "./secret", buffer, sizeof(buffer), "");
 
     LE_ASSERT(result != LE_OVERFLOW);
 
     if (result == LE_OK)
     {
-        credentials.publicKey.assign((char*)buffer, size);
-
-        size = sizeof(buffer);
-        name = keyName + "/secret";
-        result = le_secStore_Read(name.c_str(), (uint8_t*)buffer, &size);
-
-        LE_ASSERT(result != LE_OVERFLOW);
-
-        if (result == LE_OK)
-        {
-            credentials.secretKey.assign((char*)buffer, size);
-        }
+        credentials.secretKey = buffer;
     }
+
+    le_cfg_CancelTxn(iterRef);
 
     return result;
 }
@@ -87,25 +83,14 @@ static le_result_t SaveKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    std::string publicName = keyName + "/public";
-    le_result_t result = le_secStore_Write(publicName.c_str(),
-                                           (uint8_t*)credentials.publicKey.c_str(),
-                                           credentials.publicKey.size());
-    if (result != LE_OK)
-    {
-        return result;
-    }
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateWriteTxn(keyName);
 
-    std::string secretName = keyName + "/secret";
-    result = le_secStore_Write(secretName.c_str(),
-                               (uint8_t*)credentials.secretKey.c_str(),
-                               credentials.secretKey.size());
-    if (result != LE_OK)
-    {
-        le_secStore_Delete(publicName.c_str());
-    }
+    le_cfg_SetString(iterRef, "./public", credentials.publicKey.c_str());
+    le_cfg_SetString(iterRef, "./secret", credentials.secretKey.c_str());
 
-    return result;
+    le_cfg_CommitTxt(iterRef);
+
+    return LE_OK;
 }
 
 
@@ -159,20 +144,7 @@ static void DeleteKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    std::string fullName = keyName + "/public";
-    le_result_t result = le_secStore_Delete(fullName.c_str());
-
-    LE_WARN_IF((result != LE_OK) && (result != LE_NOT_FOUND),
-               "Could not delete key, %s",
-               keyName.c_str());
-
-
-    fullName = keyName + "/secret";
-    result = le_secStore_Delete(fullName.c_str());
-
-    LE_WARN_IF((result != LE_OK) && (result != LE_NOT_FOUND),
-               "Could not delete key, %s",
-               keyName.c_str());
+    le_cfg_QuickDeleteNode(keyName);
 }
 
 
