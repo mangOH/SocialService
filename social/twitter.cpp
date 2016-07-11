@@ -40,7 +40,7 @@ static le_result_t LoadKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn(keyName);
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn(keyName.c_str());
 
     char buffer[LE_CFG_STR_LEN_BYTES] = "";
     le_result_t result = le_cfg_GetString(iterRef, "./public", buffer, sizeof(buffer), "");
@@ -83,12 +83,12 @@ static le_result_t SaveKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    le_cfg_IteratorRef_t iterRef = le_cfg_CreateWriteTxn(keyName);
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateWriteTxn(keyName.c_str());
 
     le_cfg_SetString(iterRef, "./public", credentials.publicKey.c_str());
     le_cfg_SetString(iterRef, "./secret", credentials.secretKey.c_str());
 
-    le_cfg_CommitTxt(iterRef);
+    le_cfg_CommitTxn(iterRef);
 
     return LE_OK;
 }
@@ -144,7 +144,7 @@ static void DeleteKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    le_cfg_QuickDeleteNode(keyName);
+    le_cfg_QuickDeleteNode(keyName.c_str());
 }
 
 
@@ -163,27 +163,22 @@ bool serviceConfig_IsAuthenticated
 )
 //--------------------------------------------------------------------------------------------------
 {
-    size_t size = 0;
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn("");
 
     std::string name = ConsumerKeyName + "/public";
-    le_result_t result = le_secStore_Read(name.c_str(), nullptr, &size);
+    bool exists = le_cfg_NodeExists(iterRef, name.c_str());
 
-    if (   (result != LE_OK)
-        && (result != LE_OVERFLOW))
+    if (exists == false)
     {
         return false;
     }
 
     name = OAuthKeyName + "/public";
-    result = le_secStore_Read(name.c_str(), nullptr, &size);
+    exists = le_cfg_NodeExists(iterRef, name.c_str());
 
-    if (   (result != LE_OK)
-        && (result != LE_OVERFLOW))
-    {
-        return false;
-    }
+    le_cfg_CancelTxn(iterRef);
 
-    return true;
+    return exists;
 }
 
 
