@@ -221,7 +221,7 @@ le_result_t serviceConfig_SetConsumerKeys
 
 
 
-#include <iostream>
+
 //--------------------------------------------------------------------------------------------------
 /**
  * Request an authentication PIN URL be generated.  This URL is then given to the user to visit.  On
@@ -240,54 +240,42 @@ le_result_t serviceConfig_GetPinUrl
 )
 //--------------------------------------------------------------------------------------------------
 {
-LE_INFO("---------<  0>------------");
     http::KeyPair_t consumerKeys;
     le_result_t result = LoadKeys(ConsumerKeyName, consumerKeys);
 
-LE_INFO("---------<  1>------------");
     if (result != LE_OK)
     {
-LE_INFO("---------<  2>------------");
         LE_ERROR("Could not load consumer key set: %s", LE_RESULT_TXT(result));
         return LE_UNAVAILABLE;
     }
 
-LE_INFO("---------<  3>------------");
     try
     {
-LE_INFO("---------<  4>------------");
         http::KeyPair_t oAuthKeys;
         oAuthKeys = http::RequestTempAccessTokens(consumerKeys,
                                                   "https://api.twitter.com/oauth/request_token");
 
-LE_INFO("---------<  5>------------");
         int n = snprintf(url,
                          urlBufferSize,
                          "http://twitter.com/oauth/authorize?oauth_token=%s",
                          oAuthKeys.publicKey.c_str());
 
-LE_INFO("---------<  6>------------");
         if (   (n >= (int)urlBufferSize)
             || (n == -1))
         {
-LE_INFO("---------<  7>------------");
             result = LE_OVERFLOW;
         }
         else
         {
-LE_INFO("---------<  8>------------");
             if ((result = SaveKeys(OAuthTempKeyName, oAuthKeys)) != LE_OK)
             {
-LE_INFO("---------<  9>------------");
                 LE_ERROR("Could not save OAuth key set: %s", LE_RESULT_TXT(result));
                 result = LE_UNAVAILABLE;
             }
         }
-LE_INFO("---------< 10>------------");
     }
     catch (json::Value_t& error)
     {
-LE_INFO("---------< 11>------------");
         result = LE_COMM_ERROR;
         LE_ERROR("JSON error.");
 
@@ -295,12 +283,10 @@ LE_INFO("---------< 11>------------");
     }
     catch (std::runtime_error& error)
     {
-LE_INFO("---------< 12>------------");
         result = LE_COMM_ERROR;
         LE_ERROR("Communication error with server: %s", error.what());
     }
 
-LE_INFO("---------< 13>------------");
     return result;
 }
 
@@ -363,7 +349,6 @@ le_result_t serviceConfig_TransmitUserPin
 
 
 
-#include <fstream>
 //--------------------------------------------------------------------------------------------------
 /**
  * Tweet a status update to the world at large.
