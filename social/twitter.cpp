@@ -170,6 +170,7 @@ bool serviceConfig_IsAuthenticated
 
     if (exists == false)
     {
+        le_cfg_CancelTxn(iterRef);
         return false;
     }
 
