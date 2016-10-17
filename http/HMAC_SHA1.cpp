@@ -1,8 +1,13 @@
-//******************************************************************************
-//* HMAC_SHA1.cpp : Implementation of HMAC SHA1 algorithm
-//*                 Comfort to RFC 2104
-//*
-//******************************************************************************
+/**
+ * @file
+ *
+ * Implementation of HMAC SHA1 algorithm. Comfort to RFC 2104.
+ *
+ * <HR>
+ *
+ * Copyright (C) Sierra Wireless, Inc. Use of this work is subject to license.
+ */
+
 #include "HMAC_SHA1.h"
 #include <iostream>
 #include <memory>
