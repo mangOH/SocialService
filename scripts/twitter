@@ -1,2 +1,2 @@
 #!/bin/sh
-exec execInApp socialService /bin/twitterClient $@
+app runProc socialService --exe=twitterClient -- $@
