@@ -8,8 +8,9 @@ bundles:
 
     file:
     {
-        lib/libcurl.so    /lib/
-        lib/libcurl.so.4  /lib/
+        lib/libcurl.so      /lib/
+        lib/libcurl.so.4    /lib/
+        config/resolv.conf  /etc/
     }
 }
 
@@ -31,8 +32,9 @@ requires:
         /lib/libresolv.so.2     /lib/
 
         /etc/host.conf          /etc/
-        /etc/resolv.conf        /etc/
-        /etc/resolv.conf        /etc/
+        // Ideally we would just require the /etc/resolv.conf file, but there is a bug (LE-5902)
+        // that prevents this from working. Instead, we bundle a resolv.conf
+        // /etc/resolv.conf        /etc/
         /etc/ld.so.cache        /etc/
         /etc/hosts              /etc/
         /etc/ld.so.cache        /etc/

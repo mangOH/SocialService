@@ -8,14 +8,6 @@ executables:
     twitterClient = ( twitterClient )
 }
 
-requires:
-{
-    file:
-    {
-        /usr/bin/strace /bin/
-    }
-}
-
 processes:
 {
     run:
@@ -29,7 +21,6 @@ bundles:
     file:
     {
         [x] scripts/twitter  /bin/
-        config/resolv.conf /etc/
     }
 }
 
