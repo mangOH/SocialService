@@ -23,7 +23,7 @@ requires:
 
     api:
     {
-        le_secStore.api
+        le_cfg.api
     }
 }
 

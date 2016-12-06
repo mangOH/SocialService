@@ -1,4 +1,4 @@
-version: 1.0
+version: 1.1
 sandboxed: true
 start: auto
 
@@ -6,6 +6,14 @@ executables:
 {
     socialService = ( social json http )
     twitterClient = ( twitterClient )
+}
+
+requires:
+{
+    configTree:
+    {
+        [w] .
+    }
 }
 
 processes:
@@ -31,8 +39,6 @@ extern:
 
 bindings:
 {
-    socialService.social.le_secStore -> <root>.le_secStore
-
     twitterClient.twitterClient.serviceConfig -> socialService.social.serviceConfig
     twitterClient.twitterClient.twitter -> socialService.social.twitter
 }

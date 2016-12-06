@@ -40,29 +40,25 @@ static le_result_t LoadKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    char buffer[SERVICECONFIG_KEY_LEN + 1] = "";
-    size_t size = sizeof(buffer);
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn(keyName.c_str());
 
-    std::string name = keyName + "/public";
-    le_result_t result = le_secStore_Read(name.c_str(), (uint8_t*)buffer, &size);
+    char buffer[LE_CFG_STR_LEN_BYTES] = "";
+    le_result_t result = le_cfg_GetString(iterRef, "./public", buffer, sizeof(buffer), "");
+
+    LE_ASSERT(result != LE_OVERFLOW);
+
+    credentials.publicKey = buffer;
+
+    result = le_cfg_GetString(iterRef, "./secret", buffer, sizeof(buffer), "");
 
     LE_ASSERT(result != LE_OVERFLOW);
 
     if (result == LE_OK)
     {
-        credentials.publicKey.assign((char*)buffer, size);
-
-        size = sizeof(buffer);
-        name = keyName + "/secret";
-        result = le_secStore_Read(name.c_str(), (uint8_t*)buffer, &size);
-
-        LE_ASSERT(result != LE_OVERFLOW);
-
-        if (result == LE_OK)
-        {
-            credentials.secretKey.assign((char*)buffer, size);
-        }
+        credentials.secretKey = buffer;
     }
+
+    le_cfg_CancelTxn(iterRef);
 
     return result;
 }
@@ -87,25 +83,14 @@ static le_result_t SaveKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    std::string publicName = keyName + "/public";
-    le_result_t result = le_secStore_Write(publicName.c_str(),
-                                           (uint8_t*)credentials.publicKey.c_str(),
-                                           credentials.publicKey.size());
-    if (result != LE_OK)
-    {
-        return result;
-    }
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateWriteTxn(keyName.c_str());
 
-    std::string secretName = keyName + "/secret";
-    result = le_secStore_Write(secretName.c_str(),
-                               (uint8_t*)credentials.secretKey.c_str(),
-                               credentials.secretKey.size());
-    if (result != LE_OK)
-    {
-        le_secStore_Delete(publicName.c_str());
-    }
+    le_cfg_SetString(iterRef, "./public", credentials.publicKey.c_str());
+    le_cfg_SetString(iterRef, "./secret", credentials.secretKey.c_str());
 
-    return result;
+    le_cfg_CommitTxn(iterRef);
+
+    return LE_OK;
 }
 
 
@@ -159,20 +144,7 @@ static void DeleteKeys
 )
 //--------------------------------------------------------------------------------------------------
 {
-    std::string fullName = keyName + "/public";
-    le_result_t result = le_secStore_Delete(fullName.c_str());
-
-    LE_WARN_IF((result != LE_OK) && (result != LE_NOT_FOUND),
-               "Could not delete key, %s",
-               keyName.c_str());
-
-
-    fullName = keyName + "/secret";
-    result = le_secStore_Delete(fullName.c_str());
-
-    LE_WARN_IF((result != LE_OK) && (result != LE_NOT_FOUND),
-               "Could not delete key, %s",
-               keyName.c_str());
+    le_cfg_QuickDeleteNode(keyName.c_str());
 }
 
 
@@ -191,27 +163,23 @@ bool serviceConfig_IsAuthenticated
 )
 //--------------------------------------------------------------------------------------------------
 {
-    size_t size = 0;
+    le_cfg_IteratorRef_t iterRef = le_cfg_CreateReadTxn("");
 
     std::string name = ConsumerKeyName + "/public";
-    le_result_t result = le_secStore_Read(name.c_str(), nullptr, &size);
+    bool exists = le_cfg_NodeExists(iterRef, name.c_str());
 
-    if (   (result != LE_OK)
-        && (result != LE_OVERFLOW))
+    if (exists == false)
     {
+        le_cfg_CancelTxn(iterRef);
         return false;
     }
 
     name = OAuthKeyName + "/public";
-    result = le_secStore_Read(name.c_str(), nullptr, &size);
+    exists = le_cfg_NodeExists(iterRef, name.c_str());
 
-    if (   (result != LE_OK)
-        && (result != LE_OVERFLOW))
-    {
-        return false;
-    }
+    le_cfg_CancelTxn(iterRef);
 
-    return true;
+    return exists;
 }
 
 
@@ -249,7 +217,7 @@ le_result_t serviceConfig_SetConsumerKeys
 
 
 
-#include <iostream>
+
 //--------------------------------------------------------------------------------------------------
 /**
  * Request an authentication PIN URL be generated.  This URL is then given to the user to visit.  On
@@ -268,54 +236,42 @@ le_result_t serviceConfig_GetPinUrl
 )
 //--------------------------------------------------------------------------------------------------
 {
-LE_INFO("---------<  0>------------");
     http::KeyPair_t consumerKeys;
     le_result_t result = LoadKeys(ConsumerKeyName, consumerKeys);
 
-LE_INFO("---------<  1>------------");
     if (result != LE_OK)
     {
-LE_INFO("---------<  2>------------");
         LE_ERROR("Could not load consumer key set: %s", LE_RESULT_TXT(result));
         return LE_UNAVAILABLE;
     }
 
-LE_INFO("---------<  3>------------");
     try
     {
-LE_INFO("---------<  4>------------");
         http::KeyPair_t oAuthKeys;
         oAuthKeys = http::RequestTempAccessTokens(consumerKeys,
                                                   "https://api.twitter.com/oauth/request_token");
 
-LE_INFO("---------<  5>------------");
         int n = snprintf(url,
                          urlBufferSize,
                          "http://twitter.com/oauth/authorize?oauth_token=%s",
                          oAuthKeys.publicKey.c_str());
 
-LE_INFO("---------<  6>------------");
         if (   (n >= (int)urlBufferSize)
             || (n == -1))
         {
-LE_INFO("---------<  7>------------");
             result = LE_OVERFLOW;
         }
         else
         {
-LE_INFO("---------<  8>------------");
             if ((result = SaveKeys(OAuthTempKeyName, oAuthKeys)) != LE_OK)
             {
-LE_INFO("---------<  9>------------");
                 LE_ERROR("Could not save OAuth key set: %s", LE_RESULT_TXT(result));
                 result = LE_UNAVAILABLE;
             }
         }
-LE_INFO("---------< 10>------------");
     }
     catch (json::Value_t& error)
     {
-LE_INFO("---------< 11>------------");
         result = LE_COMM_ERROR;
         LE_ERROR("JSON error.");
 
@@ -323,12 +279,10 @@ LE_INFO("---------< 11>------------");
     }
     catch (std::runtime_error& error)
     {
-LE_INFO("---------< 12>------------");
         result = LE_COMM_ERROR;
         LE_ERROR("Communication error with server: %s", error.what());
     }
 
-LE_INFO("---------< 13>------------");
     return result;
 }
 
@@ -391,7 +345,6 @@ le_result_t serviceConfig_TransmitUserPin
 
 
 
-#include <fstream>
 //--------------------------------------------------------------------------------------------------
 /**
  * Tweet a status update to the world at large.
