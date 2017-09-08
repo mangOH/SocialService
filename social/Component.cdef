@@ -9,16 +9,16 @@ cxxflags:
 {
     -std=c++11
 
-    -I$MANGOH_ROOT/apps/SocialService/http/
-    -I$MANGOH_ROOT/apps/SocialService/json/
+    -I${CURDIR}/../http
+    -I${CURDIR}/../json/
 }
 
 requires:
 {
     component:
     {
-        $MANGOH_ROOT/apps/SocialService/json
-        $MANGOH_ROOT/apps/SocialService/http
+        ${CURDIR}/../json
+        ${CURDIR}/../http
     }
 
     api:
@@ -31,7 +31,7 @@ provides:
 {
     api:
     {
-        $MANGOH_ROOT/apps/SocialService/interfaces/twitter.api
-        $MANGOH_ROOT/apps/SocialService/interfaces/serviceConfig.api
+        ${CURDIR}/../interfaces/twitter.api
+        ${CURDIR}/../interfaces/serviceConfig.api
     }
 }

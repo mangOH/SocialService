@@ -12,14 +12,14 @@ sources:
 cxxflags:
 {
     -std=c++11
-    -I$MANGOH_ROOT/apps/SocialService/json/
+    -I${CURDIR}/../json
 }
 
 requires:
 {
     component:
     {
-        $MANGOH_ROOT/apps/SocialService/json
+        ${CURDIR}/../json
     }
 
     device:
